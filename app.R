@@ -15,11 +15,11 @@ library(shinyWidgets)
 library(shinydashboard)
 
 source("R Scripts/Data_Master.R")
+source("R Scripts/Court.R")
 source("R Scripts/Database.R")
+source("R Scripts/Color.R")
 source("R Scripts/Data24.R")
 source("R Scripts/Data25.R")
-source("R Scripts/Color.R")
-source("R Scripts/Court.R")
 source("R Scripts/Practice.R")
 source("R Scripts/setSliderColor.R")
 

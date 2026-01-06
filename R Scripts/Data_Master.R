@@ -1,3 +1,5 @@
+# Data_Master.R - Master data constants and helpers
+
 trad_cols = c("+/-", "PTS", 
               "FGM-A", "FG%", "3PM-A", "3P%", "FTM-A", "FT%", 
               "OREB", "DREB", "REB", "TO")
@@ -17,18 +19,36 @@ player_cols = c("PTS", "FGM-A", "FG%",
                 "OREB", "DREB", "REB", "AST", "TO", "AST/TO", 
                 "STL", "BLK", "PF")
 
-w_non_conf_opponents25 = read_csv("./Team Data/w_non_conf_opponents.csv")$Team
-m_non_conf_opponents25 = read_csv("./Team Data/m_non_conf_opponents.csv")$Team
+# Read team data files with error handling
+w_non_conf_opponents25 <- tryCatch({
+  read_csv("./Team Data/w_non_conf_opponents.csv", show_col_types = FALSE)$Team
+}, error = function(e) c())
 
-w_roster25 = read_csv("./Team Data/w_chicago_roster.csv")$Player
-m_roster25 = read_csv("./Team Data/m_chicago_roster.csv")$Player
+m_non_conf_opponents25 <- tryCatch({
+  read_csv("./Team Data/m_non_conf_opponents.csv", show_col_types = FALSE)$Team
+}, error = function(e) c())
 
-region_labels <- read_csv("./Team Data/region_labels.csv")
+w_roster25 <- tryCatch({
+  read_csv("./Team Data/w_chicago_roster.csv", show_col_types = FALSE)$Player
+}, error = function(e) c())
 
-shading_df <- read_csv("./Team Data/shading.csv")
+m_roster25 <- tryCatch({
+  read_csv("./Team Data/m_chicago_roster.csv", show_col_types = FALSE)$Player
+}, error = function(e) c())
 
-uaa_teams_csv <- read_csv("./Team Data/uaa_teams.csv")
-uaa_teams = uaa_teams_csv$Team
+region_labels <- tryCatch({
+  read_csv("./Team Data/region_labels.csv", show_col_types = FALSE)
+}, error = function(e) data.frame())
+
+shading_df <- tryCatch({
+  read_csv("./Team Data/shading.csv", show_col_types = FALSE)
+}, error = function(e) data.frame())
+
+uaa_teams_csv <- tryCatch({
+  read_csv("./Team Data/uaa_teams.csv", show_col_types = FALSE)
+}, error = function(e) data.frame(Team = c()))
+
+uaa_teams = if (nrow(uaa_teams_csv) > 0) uaa_teams_csv$Team else c()
 
 extract_player <- function(action) {
   raw_player <- str_split(action, " by ")[[1]][2] 
@@ -52,4 +72,3 @@ date_filter_helper = function(dates, y=2024) {
     return( dates[(dates >= threshold)] )
   }
 }
-

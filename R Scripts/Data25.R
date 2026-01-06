@@ -1,5 +1,5 @@
 # Data25.R - 2025 Season Data
-# Simplified version - no remote fetching to avoid startup timeouts
+# Simplified version - no remote fetching, fast startup
 
 # Initialize empty variables for 2025 data
 team_box25 <- data.frame()
@@ -12,7 +12,6 @@ w_all_dates25 <- c()
 m_all_dates25 <- c()
 
 refresh_dates25 = function() {
-
   tryCatch({
     w_all_dates25 <<- tryCatch({
       unique(c(get_shots("WBB", "Chicago", y=2025)$Date, 
@@ -30,13 +29,8 @@ refresh_dates25 = function() {
     
     m_practices25 <<- m_all_dates25[!(m_all_dates25 %in% m_game_dates25)]
   }, error = function(e) {
-    w_game_dates25 <<- c()
-    m_game_dates25 <<- c()
-    w_practices25 <<- c()
-    m_practices25 <<- c()
-    w_all_dates25 <<- c()
-    m_all_dates25 <<- c()
+    # Silently fail
   })
 }
 
-refresh_dates25()
+# Don't call refresh_dates25() on startup - defer to server
