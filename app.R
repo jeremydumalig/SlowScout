@@ -1,10 +1,8 @@
 library(gt)
 library(DT)
 library(zoo)
-library(pak)
 library(shiny)
 library(plotly)
-library(reactR)
 library(cowplot)
 library(ggplot2)
 library(janitor)
@@ -12,27 +10,15 @@ library(gtExtras)
 library(reactable)
 library(tidyverse)
 library(paletteer)
-library(mongolite)
-library(comprehenr)
 library(shinytitle)
 library(shinyWidgets)
-library(shinyvalidate)
 library(shinydashboard)
-
-# setwd("/Users/jdumalig/Desktop/Productivity/SlowScout")
 
 source("R Scripts/Data_Master.R")
 source("R Scripts/Database.R")
 source("R Scripts/Data24.R")
 source("R Scripts/Data25.R")
 source("R Scripts/Color.R")
-source("R Scripts/Rankings.R")
-source("R Scripts/Rotations.R")
-source("R Scripts/Flow.R")
-source("R Scripts/Game.R")
-source("R Scripts/Lineups.R")
-source("R Scripts/Player_Logs.R")
-source("R Scripts/Team_Logs.R")
 source("R Scripts/Court.R")
 source("R Scripts/Practice.R")
 source("R Scripts/setSliderColor.R")
@@ -58,12 +44,6 @@ ui = dashboardPage(
                   choices=c(uaa_teams, "Non-UAA Scout"),
                   selected="Chicago"),
       menuItem("Team/Scout Dashboard", tabName="practice_dash"),
-      menuItem("UAA Rankings", tabName="rankings_dash"),
-      menuItem("Lineup Splits", tabName="lineup_dash"),
-      menuItem("Rotation Charts", tabName="rotation_dash"),
-      menuItem("Single-Game View", tabName="single_game"),
-      menuItem("Team Logs", tabName="team_dash"),
-      menuItem("Player Logs", tabName="player_dash"),
       menuItem("Shot Plotter", tabName="plotter_dash"),
       menuItem("Stats Glossary", tabName="glossary"))),
   dashboardBody(
@@ -220,227 +200,6 @@ ui = dashboardPage(
                        uiOutput("remove_event"))
               )
               )),
-      tabItem(tabName="single_game",
-              h1("Single-Game View"),
-              br(),
-              fluidPage(
-                fluidRow(
-                  column(4, align="center",
-                         radioGroupButtons(
-                           inputId="single_conf",
-                           label="", 
-                           choices=c("Full Season", "Conference"),
-                           status="default")),
-                  column(4, align="center",
-                         uiOutput("single_select_game")),
-                  column(4, align="center",
-                         radioGroupButtons(
-                           inputId="single_adv",
-                           label="", 
-                           choices=c("Traditional", 
-                                     "Advanced", 
-                                     "Miscellaneous"),
-                           status="default")))),
-              br(),
-              gt_output("single_game_table"),
-              br(),
-              plotOutput("game_flow",
-                         height=750)),
-      tabItem(tabName="rotation_dash",
-              h1("Rotations Dashboard"),
-              br(),
-              p(paste("Each box below represents a minute of the game, with",
-                      "shaded boxes indicating a player's on-court presence.", 
-                      sep=" ")),
-              p(paste("Lighter boxes indicate a player only played a portion",
-                      "of that minute due to a substitution.", sep=" ")),
-              br(),
-              setSliderColor(c("#862633", "#862633", 
-                               "#862633", "#862633", "#862633"), 
-                             c(1, 2, 3, 4, 5)),
-              fluidPage(fluidRow(
-                column(4, align="center",
-                       radioGroupButtons(
-                         inputId="rotation_conf",
-                         label="", 
-                         choices=c("Full Season", "Conference"),
-                         status="default")),
-                column(8, align="center",
-                       uiOutput("rotation_margin_slider")))),
-              plotOutput("season_rotation_chart")),
-      tabItem(tabName="rankings_dash",
-              h1("Rankings Dashboard"),
-              br(),
-              fluidPage(
-                fluidRow(
-                  column(4, align="center",
-                         radioGroupButtons(
-                           inputId="rankings_adv",
-                           label="", 
-                           choices=c("Traditional", 
-                                     "Advanced", 
-                                     "Miscellaneous"),
-                           status="default")),
-                  column(4, align="center",
-                         radioGroupButtons(
-                           inputId="rankings_conf",
-                           label="", 
-                           choices=c("Full Season", "Conference"),
-                           status="default")),
-                  column(4, align="center",
-                         radioGroupButtons(
-                           inputId="rankings_opp",
-                           label="", 
-                           choices=c("Team", "Opponent"),
-                           status="default"))
-                )
-              ),
-              fluidRow(
-                column(3),
-                column(6, align="center",
-                       sliderInput(
-                         inputId="rankings_min", 
-                         label="Select minutes threshold:", 
-                         min=0, max=40,
-                         value=10,
-                         width="100%")),
-                column(3)
-              ),
-              br(),
-              tabsetPanel(
-                type="tabs",                     
-                tabPanel("Teams", gt_output("team_rankings")),
-                tabPanel("Players", gt_output("player_rankings")),
-                tabPanel("Assists", gt_output("assist_rankings"))
-              )
-      ),
-      tabItem(tabName="lineup_dash",
-              h1("Lineup Dashboard"),
-              br(),
-              fluidPage(
-                fluidRow(
-                  column(6, align="center",
-                         uiOutput("select_on_players")),
-                  column(6, align="center",
-                         uiOutput("select_off_players"))
-                )
-              ),
-              br(),
-              fluidPage(
-                fluidRow(
-                  column(3, align="center",
-                         sliderInput(
-                           inputId="lineup_min", 
-                           label="Select minutes threshold:", 
-                           min=0, max=40,
-                           value=5,
-                           width="100%")),
-                  column(3, align="center",
-                         radioGroupButtons(
-                           inputId="lineup_conf",
-                           label="", 
-                           choices=c("Full Season", "Conference"),
-                           status="default")),
-                  column(3, align="center",
-                         radioGroupButtons(
-                           inputId="lineup_opp",
-                           label="", 
-                           choices=c("Team", "Opponent"),
-                           status="default")),
-                  column(3, align="center",
-                         radioGroupButtons(
-                           inputId="lineup_adv",
-                           label="", 
-                           choices=c("Traditional", "Advanced"),
-                           status="default")))
-              ),
-              br(),
-              gt_output("lineup_splits"),
-              br(),
-              h3("How Often This Lineup Shared the Court"),
-              plotOutput("lineup_rotation")),
-      tabItem(tabName="player_dash",
-              h1("Player Dashboard"),
-              br(),
-              fluidPage(
-                fluidRow(
-                  column(8, uiOutput("select_player")),
-                  column(4, 
-                         radioGroupButtons(
-                           inputId="player_conf",
-                           label="", 
-                           choices=c("Full Season", "Conference"),
-                           status="default")
-                  )
-                )
-              ),
-              br(), 
-              gt_output("player_game_log"),
-              br(),
-              splitLayout(
-                cellWidths=c("50%", "50%"), 
-                tabsetPanel(type="tabs",                     
-                            tabPanel("FG%", plotlyOutput("player_trends_fg")),
-                            tabPanel("2P%", plotlyOutput("player_trends_2p")),
-                            tabPanel("3P%", plotlyOutput("player_trends_3p")),
-                            tabPanel("3P-R", plotlyOutput("player_trends_3pr")),
-                            tabPanel("FT%", plotlyOutput("player_trends_ft")),
-                            tabPanel("FT-R", plotlyOutput("player_trends_ftr"))),
-                tabsetPanel(type="tabs",                     
-                            tabPanel("FG%", plotlyOutput("player_trends_fg2")),
-                            tabPanel("2P%", plotlyOutput("player_trends_2p2")),
-                            tabPanel("3P%", plotlyOutput("player_trends_3p2")),
-                            tabPanel("3P-R", plotlyOutput("player_trends_3pr2")),
-                            tabPanel("FT%", plotlyOutput("player_trends_ft2")),
-                            tabPanel("FT-R", plotlyOutput("player_trends_ftr2")))
-              ),
-              br(),
-              h3("Rotation Game Log"),
-              br(),
-              plotOutput("player_rotation",
-                         height=500)),
-      tabItem(tabName="team_dash",
-              h1("Team Dashboard"),
-              fluidPage(fluidRow(
-                column(4, align="center",
-                       radioGroupButtons(
-                         inputId="team_conf",
-                         label="", 
-                         choices=c("Full Season", "Conference"),
-                         status="default")),
-                column(4, align="center",
-                       radioGroupButtons(
-                         inputId="team_adv",
-                         label="", 
-                         choices=c("Traditional", "Advanced", "Miscellaneous"),
-                         status="default")),
-                column(4, align="center",
-                       radioGroupButtons(
-                         inputId="team_side",
-                         label="", 
-                         choices=c("Team", "Opponent"),
-                         status="default")))),
-              gt_output("team_game_log"),
-              br(),
-              splitLayout(
-                cellWidths=c("50%", "50%"), 
-                tabsetPanel(type="tabs",                     
-                            tabPanel("Chronological Order", 
-                                     plotlyOutput("margin_date")),
-                            tabPanel("Ascending Order", 
-                                     plotlyOutput("margin_margin")),
-                            tabPanel("Team Order", 
-                                     plotlyOutput("margin_team"))),
-                tabsetPanel(type="tabs",                     
-                            tabPanel("FG%", plotlyOutput("trends_fg")),
-                            tabPanel("2P%", plotlyOutput("trends_2p")),
-                            tabPanel("3P%", plotlyOutput("trends_3p")),
-                            tabPanel("3P-R", plotlyOutput("trends_3pr")),
-                            tabPanel("FT%", plotlyOutput("trends_ft")),
-                            tabPanel("FT-R", plotlyOutput("trends_ftr")),
-                            tabPanel("ORB%", plotlyOutput("trends_orb")),
-                            tabPanel("TO%", plotlyOutput("trends_to"))))
-      ),
       tabItem(tabName="glossary",
               h1("SlowScout Manual"),
               h4(
@@ -532,7 +291,17 @@ server = function(input, output, session) {
   
   choices_df = reactive({get_players(input$league, input$team, y=input$season)})
   
-  games_df = reactive({get_games(input$league, input$team, y=input$season)})
+  games_df = reactive({
+    if (input$season == 2024) {
+      team_box24 %>%
+        filter(League == input$league,
+               Team == input$team) %>%
+        mutate(Title = case_when((Location == "Away") ~ paste(Date, Opponent, sep=" at "),
+                                 TRUE ~ paste(Date, Opponent, sep=" vs ")))
+    } else {
+      data.frame(`+/-` = 0, Title = character(0), check.names = FALSE)
+    }
+  })
   
   ########## practice_dash ########## 
   
@@ -708,271 +477,6 @@ server = function(input, output, session) {
     shot_trends(input$league, input$team, input$box_players,
                 input$box_date, input$plot_types,
                 y=input$season)
-  })
-  
-  ########## rankings_dash ########## 
-  
-  output$team_rankings = render_gt({
-    team_rankings(input$league,
-                  opp=(input$rankings_opp == "Opponent"),
-                  adv=(input$rankings_adv == "Advanced"),
-                  misc=(input$rankings_adv == "Miscellaneous"),
-                  conf=(input$rankings_conf == "Conference"),
-                  y=input$season)
-  })
-  output$player_rankings = render_gt({
-    player_rankings(input$league,
-                    min=input$rankings_min,
-                    conf=(input$rankings_conf == "Conference"),
-                    y=input$season)
-  })
-  output$assist_rankings = render_gt({
-    assist_rankings(input$league,
-                    conf=(input$rankings_conf == "Conference"),
-                    y=input$season)
-  })
-  
-  ########## lineup_dash ##########
-  
-  output$select_on_players = renderUI({
-    awesomeCheckboxGroup("on_players",
-                         "Select ON Player(s):",
-                         choices=sort(choices_df()$Player),
-                         inline=TRUE,
-                         status='danger')
-  })
-  
-  output$select_off_players = renderUI({
-    awesomeCheckboxGroup("off_players",
-                         "Select OFF Player(s):",
-                         choices=sort(choices_df()$Player),
-                         inline=TRUE,
-                         status='danger')
-  })
-  
-  output$lineup_splits = render_gt({
-    lineup_splits(input$league, input$team,
-                  input$on_players, input$off_players,
-                  opp=(input$lineup_opp == "Opponent"),
-                  adv=(input$lineup_adv == "Advanced"),
-                  conf=(input$lineup_conf == "Conference"),
-                  y=input$season)
-  })
-  
-  output$lineup_rotation = renderPlot({
-    rotation_chart("lineup", input$league, input$team,
-                   on=input$on_players,
-                   off=input$off_players,
-                   conf=(input$lineup_conf == "Conference"),
-                   y=input$season)
-  })
-  
-  ########## rotation_dash ##########
-  
-  output$rotation_margin_slider = renderUI({
-    sliderInput(
-      inputId="rotation_margin",
-      label="Filter for games decided by ___ point(s) or less:",
-      min=1,
-      max=max(abs(games_df()$`+/-`)),
-      value=max(abs(games_df()$`+/-`)),
-      width="100%")
-  })
-  
-  output$season_rotation_chart = renderPlot({
-    rotation_chart("season", input$league, input$team,
-                   margin=input$rotation_margin,
-                   conf=(input$rotation_conf == "Conference"),
-                   y=input$season)
-  })
-  
-  ########## single_game ##########
-  
-  output$single_select_game = renderUI({
-    if (input$single_conf == "Conference") {
-      filtered_games = filter(games_df(), Opponent %in% uaa_teams)
-    } else {
-      filtered_games = games_df()
-    }
-    
-    selectInput(
-      inputId="selected_game",
-      label="",
-      choices=rev(filtered_games$Title))
-  })
-  
-  output$single_game_table = render_gt({
-    split = str_split(input$selected_game, " ")
-    
-    opponent = paste(split[[1]][-1][-1], collapse=" ")
-    away = (split[[1]][2] == "at")
-    date = split[[1]][1]
-    
-    game_table(input$league,
-               if (away) input$team else opponent,
-               if (away) opponent else input$team,
-               date,
-               adv=(input$single_adv == "Advanced"),
-               misc=(input$single_adv == "Miscellaneous"),
-               y=input$season)
-  })
-  
-  output$game_flow = renderPlot({
-    date = str_split(input$selected_game, " ")[[1]][1]
-    
-    generate_game_flow(input$league,
-                       input$team,
-                       date,
-                       y=input$season)
-  })
-  
-  ########## team_dash ##########
-  
-  output$team_game_log = render_gt({
-    team_game_log(input$league, input$team,
-                  opp=(input$team_side == "Opponent"),
-                  adv=(input$team_adv == "Advanced"),
-                  misc=(input$team_adv == "Miscellaneous"),
-                  conf=(input$team_conf == "Conference"),
-                  y=input$season)
-  })
-  
-  output$margin_date = renderPlotly({
-    margin_of_victory(input$league, input$team, "date",
-                      conf=(input$team_conf == "Conference"),
-                      y=input$season)
-  })
-  output$margin_team = renderPlotly({
-    margin_of_victory(input$league, input$team, "team",
-                      conf=(input$team_conf == "Conference"),
-                      y=input$season)
-  })
-  output$margin_margin = renderPlotly({
-    margin_of_victory(input$league, input$team, "margin",
-                      conf=(input$team_conf == "Conference"),
-                      y=input$season)
-  })
-  
-  output$trends_fg = renderPlotly({
-    season_trend(input$league, input$team, "FG%",
-                 opp=(input$team_side == "Opponent"),
-                 conf=(input$team_conf == "Conference"),
-                 y=input$season)
-  })
-  output$trends_2p = renderPlotly({
-    season_trend(input$league, input$team, "2P%",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  output$trends_3p = renderPlotly({
-    season_trend(input$league, input$team, "3P%",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  output$trends_3pr = renderPlotly({
-    season_trend(input$league, input$team, "3P-R",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  output$trends_ft = renderPlotly({
-    season_trend(input$league, input$team, "FT%",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  output$trends_ftr = renderPlotly({
-    season_trend(input$league, input$team, "FT-R",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  output$trends_orb = renderPlotly({
-    season_trend(input$league, input$team, "ORB%",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  output$trends_to = renderPlotly({
-    season_trend(input$league, input$team, "TO%",
-                 conf=(input$team_conf == "Conference"),
-                 opp=(input$team_side == "Opponent"),
-                 y=input$season)
-  })
-  
-  ########## player_dash ##########
-  
-  output$select_player = renderUI({
-    players = rotation_order24[(rotation_order24 %in% choices_df()$Player)]
-    
-    selectInput(inputId="player",
-                label="Select player:",
-                choices=players
-    )
-  })
-  
-  output$player_game_log = render_gt(
-    player_game_log(input$player,
-                    conf=(input$player_conf == "Conference"),
-                    y=input$season)
-  )
-  
-  output$player_rotation = renderPlot({
-    rotation_chart("player", input$league, input$team, player=input$player,
-                   conf=(input$player_conf == "Conference"),
-                   y=input$season)
-  })
-  
-  output$player_trends_fg = renderPlotly({
-    player_season_trend(input$player, "FG%",
-                        y=input$season)
-  })
-  output$player_trends_2p = renderPlotly({
-    player_season_trend(input$player, "2P%",
-                        y=input$season)
-  })
-  output$player_trends_3p = renderPlotly({
-    player_season_trend(input$player, "3P%",
-                        y=input$season)
-  })
-  output$player_trends_3pr = renderPlotly({
-    player_season_trend(input$player, "3P-R%",
-                        y=input$season)
-  })
-  output$player_trends_ft = renderPlotly({
-    player_season_trend(input$player, "FT%%",
-                        y=input$season)
-  })
-  output$player_trends_ftr = renderPlotly({
-    player_season_trend(input$player, "FT-R",
-                        y=input$season)
-  })
-  
-  output$player_trends_fg2 = renderPlotly({
-    player_season_trend(input$player, "FG%",
-                        y=input$season)
-  })
-  output$player_trends_2p2 = renderPlotly({
-    player_season_trend(input$player, "2P%",
-                        y=input$season)
-  })
-  output$player_trends_3p2 = renderPlotly({
-    player_season_trend(input$player, "3P%",
-                        y=input$season)
-  })
-  output$player_trends_3pr2 = renderPlotly({
-    player_season_trend(input$player, "3P-R%",
-                        y=input$season)
-  })
-  output$player_trends_ft2 = renderPlotly({
-    player_season_trend(input$player, "FT%%",
-                        y=input$season)
-  })
-  output$player_trends_ftr2 = renderPlotly({
-    player_season_trend(input$player, "FT-R",
-                        y=input$season)
   })
   
   ########## plotter_dash ##########
@@ -1333,12 +837,12 @@ server = function(input, output, session) {
                !(Player %in% players)) %>%
         get_points()
     } else {
-      team_score = 0
-      opponent_score = 0
+      team_score = data.frame(PTS = 0)
+      opponent_score = data.frame(PTS = 0)
     }
     
-    h3( paste(plot_team_score() + team_score, 
-              plot_opponent_score() + opponent_score, sep="-") )
+    h3( paste(plot_team_score()$PTS + team_score$PTS, 
+              plot_opponent_score()$PTS + opponent_score$PTS, sep="-") )
   })
   
   output$court = renderPlot({
@@ -1417,15 +921,8 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$refresh_db, {
-    master_shots <<- mongo(db="STACKS",
-                           collection="shots",
-                           url=connection_url)$find()
-    master_events <<- mongo(db="STACKS",
-                            collection="events",
-                            url=connection_url)$find()
-    master_turnovers <<- mongo(db="STACKS",
-                               collection="turnovers",
-                               url=connection_url)$find()
+    # Refresh data from local CSV files
+    refresh_local_data()
     
     refresh_dates24()
     # refresh_dates25()
@@ -1543,4 +1040,3 @@ server = function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
