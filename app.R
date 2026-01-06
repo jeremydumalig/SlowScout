@@ -19,21 +19,12 @@ source("R Scripts/Data_Master.R")
 source("R Scripts/Court.R")
 source("R Scripts/Database.R")
 source("R Scripts/Color.R")
-source("R Scripts/Data24.R")
-source("R Scripts/Data25.R")
-source("R Scripts/Practice.R")
 source("R Scripts/setSliderColor.R")
 
 ui = dashboardPage(
   dashboardHeader(title="SlowScout"),
   dashboardSidebar(
     sidebarMenu(
-      radioGroupButtons(inputId="season",
-                        label="Select season:",
-                        choices=c(2024, 2025),
-                        selected=2025,
-                        status='default',
-                        justified=TRUE),
       radioGroupButtons(
         inputId = "league",
         label = "Select league:", 
@@ -44,74 +35,10 @@ ui = dashboardPage(
                   label="Select team:",
                   choices=c(uaa_teams, "Non-UAA Scout"),
                   selected="Chicago"),
-      menuItem("Team/Scout Dashboard", tabName="practice_dash"),
       menuItem("Shot Plotter", tabName="plotter_dash"),
       menuItem("Stats Glossary", tabName="glossary"))),
   dashboardBody(
     tabItems(
-      tabItem(tabName="practice_dash",
-              h1("Team/Scout Dashboard"),
-              br(),
-              fluidRow(
-                uiOutput("box_selections")
-              ),
-              gt_output("practice_box"),
-              br(),
-              fluidRow(
-                column(6,
-                       fluidRow(
-                         align='center',
-                         fluidRow(
-                           column(1),
-                           column(12, 
-                                  radioGroupButtons(
-                                    inputId="breakdown_type",
-                                    label="Table Type:",
-                                    choices=c("Only Shot Type", 
-                                              "Player + Shot Type"),
-                                    selected="Only Shot Type",
-                                    status='default')),
-                           column(1)
-                         ),
-                         column(6,
-                                radioGroupButtons(
-                                  inputId = "table_type",
-                                  label = "Data Type:", 
-                                  choices = c("Shots", "Region", "Turnovers"),
-                                  status='default')),
-                         column(6,
-                                radioGroupButtons(inputId="breakdown_min",
-                                                  label="Minimum FGA:",
-                                                  choices=c(0, 5, 10, 15),
-                                                  selected=10,
-                                                  status='default'))
-                       ),
-                       gt_output("team_shooting")),
-                column(6,
-                       align='center',
-                       uiOutput("plot_type_choices"),
-                       fluidRow(
-                         column(12,
-                                uiOutput("pick_shot_types"))
-                       ),
-                       conditionalPanel(
-                         condition = 'input.plot_type == "Hex Map"',
-                         plotOutput('hex_map_plot')
-                       ),
-                       conditionalPanel(
-                         condition = 'input.plot_type == "Shot Chart"',
-                         plotlyOutput('practice_shot_plotly')
-                       ),
-                       conditionalPanel(
-                         condition = 'input.plot_type == "Heat Map"',
-                         plotOutput('practice_shot_plot')
-                       ),
-                       conditionalPanel(
-                         condition = 'input.plot_type == "Shot Trends"',
-                         plotOutput('shot_trends_plot')
-                       ))
-              )
-      ),
       tabItem(tabName="plotter_dash",
               fluidPage(fluidRow(
                 column(2,
@@ -290,196 +217,6 @@ ui = dashboardPage(
 
 server = function(input, output, session) {
   
-  choices_df = reactive({get_players(input$league, input$team, y=input$season)})
-  
-  games_df = reactive({
-    if (input$season == 2024) {
-      team_box24 %>%
-        filter(League == input$league,
-               Team == input$team) %>%
-        mutate(Title = case_when((Location == "Away") ~ paste(Date, Opponent, sep=" at "),
-                                 TRUE ~ paste(Date, Opponent, sep=" vs ")))
-    } else {
-      data.frame(`+/-` = 0, Title = character(0), check.names = FALSE)
-    }
-  })
-  
-  ########## practice_dash ########## 
-  
-  output$box_selections = renderUI({
-    if (input$team == "Non-UAA Scout") {
-      team_box = if (input$season == 2024) team_box24 else team_box25
-      
-      box_players =
-        get_shots(input$league, "Non-UAA Scout", y=input$season)$Player %>%
-        unique()
-      
-      box_selected_players =
-        (get_shots(input$league, "Non-UAA Scout", y=input$season) %>%
-           filter(Player %in% unique(team_box$Team)))$Player %>%
-        unique()
-    } else {
-      box_players = get_players(input$league, input$team,
-                                y=input$season)$Player
-      box_selected_players = box_players
-    }
-    
-    div(
-      align='center',
-      column(4,
-             uiOutput("box_date_picker")),
-      column(4,
-             radioGroupButtons(
-               inputId="box_or_log",
-               label="Table Type:",
-               choices=c("Box Score", "Practice Log"),
-               status="default")),
-      column(4,
-             pickerInput(
-               inputId = "box_players",
-               label = "Players (entire page):",
-               choices = sort(box_players),
-               options = list(`actions-box` = TRUE),
-               multiple = TRUE,
-               selected = box_selected_players
-             ))
-    )
-  })
-  
-  output$box_date_picker = renderUI({
-    if (input$team == "Chicago") {
-      descriptions_df =
-        team_box24 %>%
-        filter(League == input$league,
-               Team == input$team) %>%
-        mutate(Description = 
-                 case_when((Location == "Away") ~ paste(Date,
-                                                        Opponent,
-                                                        sep=" at "),
-                           TRUE ~ paste(Date, Opponent,
-                                        sep=" vs "))) %>%
-        select(Date, Description) %>%
-        merge(data.frame(Date=as.character(get_dates(input$league, 
-                                                     input$team, 
-                                                     y=input$season))),
-              by="Date",
-              all.y=TRUE) %>%
-        mutate(Description = case_when(is.na(Description) ~ as.character(Date),
-                                       TRUE ~ Description))
-      
-      date_choices = c("All Practices", "All Games",
-                       "UAA Practices", "UAA Games",
-                       "Non-UAA Practices", "Non-UAA Games",
-                       rev(descriptions_df$Description))
-      selected_choice = "All Practices"
-    } else if (input$team == 'Non-UAA Scout') {
-      date_choices = c("All Games")
-      selected_choice = "All Games"
-    } else {
-      date_choices = c("All Games", rev(get_dates(input$league, 
-                                                  input$team,
-                                                  y=input$season)))
-      selected_choice = "All Games"
-    }
-    
-    pickerInput(
-      inputId = "box_date",
-      label = "Time Range (entire page):",
-      choices = date_choices,
-      selected = selected_choice
-    )
-  })
-  
-  output$practice_box = renderUI({
-    if (input$box_or_log == "Box Score") {
-      box_score(input$league, input$team, input$box_players, 
-                date=input$box_date, y=input$season)
-    } else {
-      box_log(input$league, input$team, input$box_players, 
-              date=input$box_date, y=input$season)
-    }
-  })
-  
-  output$team_shooting = render_gt({
-    if (input$breakdown_type == "Only Shot Type") {
-      shooting_table(input$league, input$team,
-                     input$box_date, input$table_type,
-                     as.integer(input$breakdown_min),
-                     player=input$box_players,
-                     y=input$season)
-    } else {
-      player_shot_type_table(input$league, input$team,
-                             input$box_date, input$table_type,
-                             as.integer(input$breakdown_min),
-                             player=input$box_players,
-                             y=input$season)
-    }
-  })
-  
-  output$plot_type_choices = renderUI({
-    if (input$team == "Chicago") {
-      radioGroupButtons(
-        inputId = "plot_type",
-        label = "Plot Type:",
-        choices = c("Hex Map", "Shot Chart", "Heat Map", "Shot Trends"),
-        status='default')
-    } else {
-      radioGroupButtons(
-        inputId = "plot_type",
-        label = "Plot Type:",
-        choices = c("Hex Map", "Shot Chart", "Heat Map"),
-        status='default')
-    }
-  })
-  
-  output$pick_shot_types = renderUI({
-    dates = retrieve_dates(input$league, input$team,
-                           input$box_date, y=input$season)
-    
-    f_shot_types =
-      (get_shots(input$league, input$team, y=input$season) %>%
-         filter(Date %in% dates,
-                Player %in% input$box_players) %>%
-         group_by(`Shot Type`) %>%
-         summarize(Count = n()) %>%
-         ungroup() %>%
-         arrange(desc(Count)))$`Shot Type` %>%
-      unique()
-    
-    pickerInput(
-      inputId = "plot_types",
-      label = "Shot Type(s):",
-      choices = f_shot_types,
-      selected = f_shot_types,
-      options = list(`actions-box` = TRUE),
-      multiple = TRUE
-    )
-  })
-  
-  output$hex_map_plot = renderPlot({
-    hex_map(input$league, input$team, input$box_date,
-            input$box_players, input$plot_types,
-            y=input$season)
-  })
-  
-  output$practice_shot_plotly = renderPlotly({
-    shot_plot(input$league, input$team, input$box_date,
-              input$box_players, input$plot_types,
-              y=input$season)
-  })
-  
-  output$practice_shot_plot = renderPlot({
-    heat_map(input$league, input$team, input$box_date,
-             input$box_players, input$plot_types,
-             y=input$season)
-  })
-  
-  output$shot_trends_plot = renderPlot({
-    shot_trends(input$league, input$team, input$box_players,
-                input$box_date, input$plot_types,
-                y=input$season)
-  })
-  
   ########## plotter_dash ##########
   
   output$tracker_pick_opponent = renderUI({
@@ -494,19 +231,22 @@ server = function(input, output, session) {
   
   output$tracker_pick_player = renderUI({
     
-    if (input$track_team == "Chicago") {
-      
-    } else if (input$track_team %in% uaa_teams) {
-      if (exists("raw_player_box25")) {
-        opponent_players =
-          (get_players(input$league, input$track_team, y=input$season) %>%
-             mutate(Name = paste(`#`, Player, sep=" - ")))$Name
+    if (input$track_team_type == "TEAM") {
+      # Team players
+      if (input$league == "WBB") {
+        team_players = w_roster25
       } else {
-        opponent_players = c()
+        team_players = m_roster25
       }
+      opponent_players = c()
+    } else if (input$track_team %in% uaa_teams) {
+      team_players = c()
+      opponent_players = c()
     } else if (input$league == "WBB") {
+      team_players = c()
       opponent_players = w_non_conf_opponents25
     } else {
+      team_players = c()
       opponent_players = m_non_conf_opponents25
     }
     
@@ -515,8 +255,8 @@ server = function(input, output, session) {
         inputId = "track_player",
         label = "Player",
         choices = (if (input$track_team_type == "TEAM")
-          c(sort(get_players(input$league, "Chicago", y=input$season)$Player), "Other")
-          else opponent_players),
+          c(sort(team_players), "Other")
+          else c(opponent_players, "Other")),
         status = "default"
       ),
       searchInput(
@@ -814,13 +554,7 @@ server = function(input, output, session) {
   })
   
   output$plotter_score = renderUI({
-    
-    if (input$season == 2024) {
-      players = c(get_players("WBB", "Chicago")$Player,
-                  get_players("MBB", "Chicago")$Player)
-    } else {
-      players = c(w_roster25, m_roster25)
-    }
+    players = c(w_roster25, m_roster25)
     
     if (!is.null(tracked_shots$df)) {
       team_score =
@@ -922,11 +656,7 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$refresh_db, {
-    # Refresh data from local CSV files
     refresh_local_data()
-    
-    refresh_dates24()
-    # refresh_dates25()
   })
   
   output$tracked_shots_table = render_gt({
