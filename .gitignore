@@ -1,4 +1,2 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
+# Google Sheets service account key (included in deploy, not in git)
+google-sheets-key.json

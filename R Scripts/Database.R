@@ -1,5 +1,5 @@
 ## Database Functions - Google Sheets Storage
-## Persists data to Google Sheets (public sheet - no auth needed)
+## Persists data to Google Sheets using service account
 
 library(googlesheets4)
 
@@ -8,8 +8,14 @@ Sys.setenv(TZ='CST6CDT')
 # Google Sheets configuration
 SHEET_ID <- "1URS4hxvfRXtf_kqDnFoyrRCE8ETlhBlN3J0MPdUlXTw"
 
-# Use public access (no authentication)
-gs4_deauth()
+# Authenticate with service account
+tryCatch({
+  gs4_auth(path = "google-sheets-key.json")
+  message("Google Sheets authentication successful")
+}, error = function(e) {
+  message("Google Sheets auth failed: ", e$message)
+  gs4_deauth()
+})
 
 # Function to read shots from Google Sheets
 read_sheets_shots <- function() {
