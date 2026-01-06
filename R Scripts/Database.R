@@ -1,5 +1,5 @@
 ## Database Functions - Google Sheets Storage
-## Persists data to Google Sheets for shinyapps.io compatibility
+## Persists data to Google Sheets (public sheet - no auth needed)
 
 library(googlesheets4)
 
@@ -8,30 +8,8 @@ Sys.setenv(TZ='CST6CDT')
 # Google Sheets configuration
 SHEET_ID <- "1URS4hxvfRXtf_kqDnFoyrRCE8ETlhBlN3J0MPdUlXTw"
 
-# Authenticate with service account using environment variable
-tryCatch({
-  # Get JSON key from environment variable
-  json_key <- Sys.getenv("GOOGLE_SHEETS_KEY")
-  
-  if (nchar(json_key) > 0) {
-    # Write to temp file for authentication
-    temp_key_file <- tempfile(fileext = ".json")
-    writeLines(json_key, temp_key_file)
-    gs4_auth(path = temp_key_file)
-    unlink(temp_key_file)  # Clean up
-  } else {
-    # Try local file for development
-    if (file.exists("google-sheets-key.json")) {
-      gs4_auth(path = "google-sheets-key.json")
-    } else {
-      message("No Google Sheets credentials found - using anonymous access")
-      gs4_deauth()
-    }
-  }
-}, error = function(e) {
-  message("Google Sheets auth failed: ", e$message)
-  gs4_deauth()
-})
+# Use public access (no authentication)
+gs4_deauth()
 
 # Function to read shots from Google Sheets
 read_sheets_shots <- function() {
@@ -164,7 +142,7 @@ remove_shot <- function(id) {
   master_shots <<- master_shots %>%
     filter(`Shot ID` != id)
   
-  # Rewrite entire sheet (Google Sheets doesn't support row deletion easily)
+  # Rewrite entire sheet
   tryCatch({
     write_sheet(master_shots, SHEET_ID, sheet = "shots")
   }, error = function(e) {
