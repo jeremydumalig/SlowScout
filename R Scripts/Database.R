@@ -1,17 +1,48 @@
-## Database Functions - In-Memory Storage
-## Works on shinyapps.io (read-only filesystem)
+## Database Functions - Google Sheets Storage
+## Persists data to Google Sheets for shinyapps.io compatibility
+
+library(googlesheets4)
 
 Sys.setenv(TZ='CST6CDT')
 
-# Function to read shots from local CSV (if exists)
-read_local_shots <- function() {
-  tryCatch({
-    if (file.exists("local_shots.csv")) {
-      shots <- read.csv("local_shots.csv", stringsAsFactors = FALSE)
-      names(shots) <- gsub("\\.", " ", names(shots))
-      return(shots)
+# Google Sheets configuration
+SHEET_ID <- "1URS4hxvfRXtf_kqDnFoyrRCE8ETlhBlN3J0MPdUlXTw"
+
+# Authenticate with service account using environment variable
+tryCatch({
+  # Get JSON key from environment variable
+  json_key <- Sys.getenv("GOOGLE_SHEETS_KEY")
+  
+  if (nchar(json_key) > 0) {
+    # Write to temp file for authentication
+    temp_key_file <- tempfile(fileext = ".json")
+    writeLines(json_key, temp_key_file)
+    gs4_auth(path = temp_key_file)
+    unlink(temp_key_file)  # Clean up
+  } else {
+    # Try local file for development
+    if (file.exists("google-sheets-key.json")) {
+      gs4_auth(path = "google-sheets-key.json")
+    } else {
+      message("No Google Sheets credentials found - using anonymous access")
+      gs4_deauth()
     }
-  }, error = function(e) {})
+  }
+}, error = function(e) {
+  message("Google Sheets auth failed: ", e$message)
+  gs4_deauth()
+})
+
+# Function to read shots from Google Sheets
+read_sheets_shots <- function() {
+  tryCatch({
+    shots <- read_sheet(SHEET_ID, sheet = "shots")
+    if (nrow(shots) > 0) {
+      return(as.data.frame(shots))
+    }
+  }, error = function(e) {
+    message("Error reading shots: ", e$message)
+  })
   
   # Return empty dataframe with correct structure
   return(data.frame(
@@ -29,15 +60,16 @@ read_local_shots <- function() {
   ))
 }
 
-# Function to read events from local CSV (if exists)
-read_local_events <- function() {
+# Function to read events from Google Sheets
+read_sheets_events <- function() {
   tryCatch({
-    if (file.exists("local_events.csv")) {
-      events <- read.csv("local_events.csv", stringsAsFactors = FALSE)
-      names(events) <- gsub("\\.", " ", names(events))
-      return(events)
+    events <- read_sheet(SHEET_ID, sheet = "events")
+    if (nrow(events) > 0) {
+      return(as.data.frame(events))
     }
-  }, error = function(e) {})
+  }, error = function(e) {
+    message("Error reading events: ", e$message)
+  })
   
   return(data.frame(
     `Event ID` = numeric(),
@@ -53,15 +85,16 @@ read_local_events <- function() {
   ))
 }
 
-# Function to read turnovers from local CSV (if exists)
-read_local_turnovers <- function() {
+# Function to read turnovers from Google Sheets
+read_sheets_turnovers <- function() {
   tryCatch({
-    if (file.exists("local_turnovers.csv")) {
-      turnovers <- read.csv("local_turnovers.csv", stringsAsFactors = FALSE)
-      names(turnovers) <- gsub("\\.", " ", names(turnovers))
-      return(turnovers)
+    turnovers <- read_sheet(SHEET_ID, sheet = "turnovers")
+    if (nrow(turnovers) > 0) {
+      return(as.data.frame(turnovers))
     }
-  }, error = function(e) {})
+  }, error = function(e) {
+    message("Error reading turnovers: ", e$message)
+  })
   
   return(data.frame(
     `Event ID` = numeric(),
@@ -74,10 +107,10 @@ read_local_turnovers <- function() {
   ))
 }
 
-# Initialize master data from local files
-master_shots <- read_local_shots()
-master_events <- read_local_events()
-master_turnovers <- read_local_turnovers()
+# Initialize master data from Google Sheets
+master_shots <- read_sheets_shots()
+master_events <- read_sheets_events()
+master_turnovers <- read_sheets_turnovers()
 
 # Threshold for separating 2024 and 2025 seasons
 threshold <- as.Date("2024-09-01")
@@ -115,13 +148,15 @@ get_shots <- function(league, team, y=2024) {
 }
 
 add_shot <- function(df) {
-  # Update master_shots in memory only
+  # Update master_shots in memory
   master_shots <<- rbind(master_shots, df)
   
-  # Try to write to file (will fail silently on shinyapps.io)
+  # Write to Google Sheets
   tryCatch({
-    write.csv(master_shots, "local_shots.csv", row.names = FALSE)
-  }, error = function(e) {})
+    sheet_append(SHEET_ID, df, sheet = "shots")
+  }, error = function(e) {
+    message("Error writing shot to Google Sheets: ", e$message)
+  })
 }
 
 remove_shot <- function(id) {
@@ -129,10 +164,12 @@ remove_shot <- function(id) {
   master_shots <<- master_shots %>%
     filter(`Shot ID` != id)
   
-  # Try to write to file (will fail silently on shinyapps.io)
+  # Rewrite entire sheet (Google Sheets doesn't support row deletion easily)
   tryCatch({
-    write.csv(master_shots, "local_shots.csv", row.names = FALSE)
-  }, error = function(e) {})
+    write_sheet(master_shots, SHEET_ID, sheet = "shots")
+  }, error = function(e) {
+    message("Error removing shot from Google Sheets: ", e$message)
+  })
 }
 
 get_all_turnovers <- function(y=2024) {
@@ -168,12 +205,15 @@ get_turnovers <- function(league, team, y=2024) {
 }
 
 add_turnover <- function(df) {
-  # Update in memory only
+  # Update in memory
   master_turnovers <<- rbind(master_turnovers, df)
   
+  # Write to Google Sheets
   tryCatch({
-    write.csv(master_turnovers, "local_turnovers.csv", row.names = FALSE)
-  }, error = function(e) {})
+    sheet_append(SHEET_ID, df, sheet = "turnovers")
+  }, error = function(e) {
+    message("Error writing turnover to Google Sheets: ", e$message)
+  })
 }
 
 remove_turnover <- function(id) {
@@ -183,8 +223,10 @@ remove_turnover <- function(id) {
     filter(`Event ID` != id)
   
   tryCatch({
-    write.csv(master_turnovers, "local_turnovers.csv", row.names = FALSE)
-  }, error = function(e) {})
+    write_sheet(master_turnovers, SHEET_ID, sheet = "turnovers")
+  }, error = function(e) {
+    message("Error removing turnover from Google Sheets: ", e$message)
+  })
 }
 
 get_all_events <- function(y=2024) {
@@ -236,12 +278,15 @@ add_to <- function(df) {
 }
 
 add_event_helper <- function(df) {
-  # Update in memory only
+  # Update in memory
   master_events <<- rbind(master_events, df)
   
+  # Write to Google Sheets
   tryCatch({
-    write.csv(master_events, "local_events.csv", row.names = FALSE)
-  }, error = function(e) {})
+    sheet_append(SHEET_ID, df, sheet = "events")
+  }, error = function(e) {
+    message("Error writing event to Google Sheets: ", e$message)
+  })
 }
 
 remove_event <- function(id) {
@@ -251,8 +296,10 @@ remove_event <- function(id) {
     filter(`Event ID` != id)
   
   tryCatch({
-    write.csv(master_events, "local_events.csv", row.names = FALSE)
-  }, error = function(e) {})
+    write_sheet(master_events, SHEET_ID, sheet = "events")
+  }, error = function(e) {
+    message("Error removing event from Google Sheets: ", e$message)
+  })
   
   # Also remove from turnovers if exists
   remove_turnover(id)
@@ -287,25 +334,19 @@ get_dates <- function(league, team, y=2024) {
   date_filter_helper(dates, y=y)
 }
 
-# Refresh data from local files (no-op on shinyapps.io)
+# Refresh data from Google Sheets
 refresh_local_data <- function() {
   tryCatch({
-    master_shots <<- read_local_shots()
-    master_events <<- read_local_events()
-    master_turnovers <<- read_local_turnovers()
-  }, error = function(e) {})
+    master_shots <<- read_sheets_shots()
+    master_events <<- read_sheets_events()
+    master_turnovers <<- read_sheets_turnovers()
+  }, error = function(e) {
+    message("Error refreshing data: ", e$message)
+  })
 }
 
 db_backup <- function() {
-  tryCatch({
-    timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-    file.copy("local_shots.csv", paste0("backup_shots_", timestamp, ".csv"))
-    file.copy("local_events.csv", paste0("backup_events_", timestamp, ".csv"))
-    file.copy("local_turnovers.csv", paste0("backup_turnovers_", timestamp, ".csv"))
-    cat("Backup created with timestamp:", timestamp, "\n")
-  }, error = function(e) {
-    cat("Backup failed (read-only filesystem)\n")
-  })
+  message("Data is stored in Google Sheets - no local backup needed")
 }
 
 get_points <- function(df) {
