@@ -5,6 +5,6 @@ account: ml0dd3-ayan-nath
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16380524
-bundleId: 11413337
+bundleId: 11413402
 url: https://ml0dd3-ayan-nath.shinyapps.io/SlowScout/
 version: 1
