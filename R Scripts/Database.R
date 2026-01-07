@@ -190,7 +190,11 @@ get_turnovers <- function(league, team, y=2024) {
 
 add_turnover <- function(df) {
   # Update in memory
-  master_turnovers <<- rbind(master_turnovers, df)
+  tryCatch({
+    master_turnovers <<- rbind(master_turnovers, df)
+  }, error = function(e) {
+    message("Error updating master_turnovers: ", e$message)
+  })
   
   # Write to Google Sheets
   tryCatch({
@@ -263,7 +267,11 @@ add_to <- function(df) {
 
 add_event_helper <- function(df) {
   # Update in memory
-  master_events <<- rbind(master_events, df)
+  tryCatch({
+    master_events <<- rbind(master_events, df)
+  }, error = function(e) {
+    message("Error updating master_events: ", e$message)
+  })
   
   # Write to Google Sheets
   tryCatch({

@@ -270,22 +270,31 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$record_oreb, {
+    # Safety check - return if player not yet selected
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    # Clean player name if needed
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=1,
                  DREB=0,
                  AST=0,
@@ -297,22 +306,29 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$record_dreb, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=1,
                  AST=0,
@@ -324,22 +340,29 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$record_ast, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=1,
@@ -351,22 +374,29 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$record_to_ps, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=0,
@@ -382,22 +412,29 @@ server = function(input, output, session) {
       add_turnover()
   })
   observeEvent(input$record_to_bp, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=0,
@@ -413,22 +450,29 @@ server = function(input, output, session) {
       add_turnover()
   })
   observeEvent(input$record_to_d, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=0,
@@ -444,22 +488,29 @@ server = function(input, output, session) {
       add_turnover()
   })
   observeEvent(input$record_to_dp, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=0,
@@ -475,22 +526,29 @@ server = function(input, output, session) {
       add_turnover()
   })
   observeEvent(input$record_to_p, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=0,
@@ -506,22 +564,29 @@ server = function(input, output, session) {
       add_turnover()
   })
   observeEvent(input$record_to_o, {
+    if (is.null(input$track_player)) return(NULL)
+    
     if (input$track_player == "Other") {
       player = input$track_player_input
+      if (is.null(player) || player == "") player = "Unknown"
     } else {
       player = input$track_player
     }
     
     new_team = (if (input$track_team_type == "TEAM")
       input$team else input$track_team)
+    if (is.null(new_team)) return(NULL)
+    
+    if (!is.null(player) && nchar(player) > 0 && grepl(" - ", player)) {
+      player = strsplit(player, " - ")[[1]][2]
+    }
     
     new_event =
       data.frame("Event ID"=new_row_id(event=TRUE),
                  League=input$league,
                  Team=new_team,
-                 Date=input$plotter_date,
-                 Player=(if (str_detect(player, " - "))
-                   strsplit(player, " - ")[[1]][2] else player),
+                 Date=as.character(input$plotter_date),
+                 Player=player,
                  OREB=0,
                  DREB=0,
                  AST=0,
