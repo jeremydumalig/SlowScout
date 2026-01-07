@@ -266,307 +266,271 @@ server = function(input, output, session) {
   })
   
   observeEvent(input$record_oreb, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      new_event =
-        data.frame("Event ID"=new_row_id(event=TRUE),
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=1,
-                   DREB=0,
-                   AST=0,
-                   TO=0,
-                   check.names=FALSE)
-      
-      add_oreb(new_event)
-      tracked_events$df = rbind(tracked_events$df, new_event)
-    }, error = function(e) {
-      message("Error recording OREB: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=1,
+                 DREB=0,
+                 AST=0,
+                 TO=0,
+                 check.names=FALSE)
+    
+    add_oreb(new_event)
+    tracked_events$df = rbind(tracked_events$df, new_event)
   })
   
   observeEvent(input$record_dreb, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      new_event =
-        data.frame("Event ID"=new_row_id(event=TRUE),
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=1,
-                   AST=0,
-                   TO=0,
-                   check.names=FALSE)
-      
-      add_dreb(new_event)
-      tracked_events$df = rbind(tracked_events$df, new_event)
-    }, error = function(e) {
-      message("Error recording DREB: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=1,
+                 AST=0,
+                 TO=0,
+                 check.names=FALSE)
+    
+    add_dreb(new_event)
+    tracked_events$df = rbind(tracked_events$df, new_event)
   })
   
   observeEvent(input$record_ast, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      new_event =
-        data.frame("Event ID"=new_row_id(event=TRUE),
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=1,
-                   TO=0,
-                   check.names=FALSE)
-      
-      add_ast(new_event)
-      tracked_events$df = rbind(tracked_events$df, new_event)
-    }, error = function(e) {
-      message("Error recording AST: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=1,
+                 TO=0,
+                 check.names=FALSE)
+    
+    add_ast(new_event)
+    tracked_events$df = rbind(tracked_events$df, new_event)
   })
   
   observeEvent(input$record_to_ps, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      event_id = new_row_id(event=TRUE)
-      
-      new_event =
-        data.frame("Event ID"=event_id,
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=0,
-                   TO="Perimeter/Strip",
-                   check.names=FALSE)
-      
-      add_to(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                        Date=as.character(input$plotter_date), Player=player,
-                        OREB=0, DREB=0, AST=0, TO=1, check.names=FALSE))
-      tracked_events$df = rbind(tracked_events$df, new_event)
-      
-      add_turnover(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                              Date=as.character(input$plotter_date), Player=player,
-                              TO="Perimeter/Strip", check.names=FALSE))
-    }, error = function(e) {
-      message("Error recording TO: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=0,
+                 TO="Perimeter/Strip",
+                 check.names=FALSE)
+    
+    add_to(mutate(new_event, TO=1))
+    tracked_events$df = rbind(tracked_events$df, new_event)
+    
+    new_event %>%
+      select(-OREB, -DREB, -AST, -TO) %>%
+      mutate(TO = "Perimeter/Strip") %>%
+      add_turnover()
   })
   observeEvent(input$record_to_bp, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      event_id = new_row_id(event=TRUE)
-      
-      new_event =
-        data.frame("Event ID"=event_id,
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=0,
-                   TO="Bad Pass",
-                   check.names=FALSE)
-      
-      add_to(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                        Date=as.character(input$plotter_date), Player=player,
-                        OREB=0, DREB=0, AST=0, TO=1, check.names=FALSE))
-      tracked_events$df = rbind(tracked_events$df, new_event)
-      
-      add_turnover(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                              Date=as.character(input$plotter_date), Player=player,
-                              TO="Bad Pass", check.names=FALSE))
-    }, error = function(e) {
-      message("Error recording TO: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=0,
+                 TO="Bad Pass",
+                 check.names=FALSE)
+    
+    add_to(mutate(new_event, TO=1))
+    tracked_events$df = rbind(tracked_events$df, new_event)
+    
+    new_event %>%
+      select(-OREB, -DREB, -AST, -TO) %>%
+      mutate(TO = "Bad Pass") %>%
+      add_turnover()
   })
   observeEvent(input$record_to_d, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      event_id = new_row_id(event=TRUE)
-      
-      new_event =
-        data.frame("Event ID"=event_id,
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=0,
-                   TO="Drive",
-                   check.names=FALSE)
-      
-      add_to(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                        Date=as.character(input$plotter_date), Player=player,
-                        OREB=0, DREB=0, AST=0, TO=1, check.names=FALSE))
-      tracked_events$df = rbind(tracked_events$df, new_event)
-      
-      add_turnover(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                              Date=as.character(input$plotter_date), Player=player,
-                              TO="Drive", check.names=FALSE))
-    }, error = function(e) {
-      message("Error recording TO: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=0,
+                 TO="Drive",
+                 check.names=FALSE)
+    
+    add_to(mutate(new_event, TO=1))
+    tracked_events$df = rbind(tracked_events$df, new_event)
+    
+    new_event %>%
+      select(-OREB, -DREB, -AST, -TO) %>%
+      mutate(TO = "Drive") %>%
+      add_turnover()
   })
   observeEvent(input$record_to_dp, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      event_id = new_row_id(event=TRUE)
-      
-      new_event =
-        data.frame("Event ID"=event_id,
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=0,
-                   TO="Drive + Pass",
-                   check.names=FALSE)
-      
-      add_to(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                        Date=as.character(input$plotter_date), Player=player,
-                        OREB=0, DREB=0, AST=0, TO=1, check.names=FALSE))
-      tracked_events$df = rbind(tracked_events$df, new_event)
-      
-      add_turnover(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                              Date=as.character(input$plotter_date), Player=player,
-                              TO="Drive + Pass", check.names=FALSE))
-    }, error = function(e) {
-      message("Error recording TO: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=0,
+                 TO="Drive + Pass",
+                 check.names=FALSE)
+    
+    add_to(mutate(new_event, TO=1))
+    tracked_events$df = rbind(tracked_events$df, new_event)
+    
+    new_event %>%
+      select(-OREB, -DREB, -AST, -TO) %>%
+      mutate(TO = "Drive + Pass") %>%
+      add_turnover()
   })
   observeEvent(input$record_to_p, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      event_id = new_row_id(event=TRUE)
-      
-      new_event =
-        data.frame("Event ID"=event_id,
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=0,
-                   TO="Post Entry",
-                   check.names=FALSE)
-      
-      add_to(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                        Date=as.character(input$plotter_date), Player=player,
-                        OREB=0, DREB=0, AST=0, TO=1, check.names=FALSE))
-      tracked_events$df = rbind(tracked_events$df, new_event)
-      
-      add_turnover(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                              Date=as.character(input$plotter_date), Player=player,
-                              TO="Post Entry", check.names=FALSE))
-    }, error = function(e) {
-      message("Error recording TO: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=0,
+                 TO="Post Entry",
+                 check.names=FALSE)
+    
+    add_to(mutate(new_event, TO=1))
+    tracked_events$df = rbind(tracked_events$df, new_event)
+    
+    new_event %>%
+      select(-OREB, -DREB, -AST, -TO) %>%
+      mutate(TO = "Post Entry") %>%
+      add_turnover()
   })
   observeEvent(input$record_to_o, {
-    tryCatch({
-      req(input$track_player)
-      
-      player = if (input$track_player == "Other") input$track_player_input else input$track_player
-      new_team = if (input$track_team_type == "TEAM") input$team else input$track_team
-      
-      if (is.null(new_team) || new_team == "") return()
-      if (is.null(player) || player == "") player = "Unknown"
-      
-      event_id = new_row_id(event=TRUE)
-      
-      new_event =
-        data.frame("Event ID"=event_id,
-                   League=input$league,
-                   Team=new_team,
-                   Date=as.character(input$plotter_date),
-                   Player=player,
-                   OREB=0,
-                   DREB=0,
-                   AST=0,
-                   TO="Other",
-                   check.names=FALSE)
-      
-      add_to(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                        Date=as.character(input$plotter_date), Player=player,
-                        OREB=0, DREB=0, AST=0, TO=1, check.names=FALSE))
-      tracked_events$df = rbind(tracked_events$df, new_event)
-      
-      add_turnover(data.frame("Event ID"=event_id, League=input$league, Team=new_team,
-                              Date=as.character(input$plotter_date), Player=player,
-                              TO="Other", check.names=FALSE))
-    }, error = function(e) {
-      message("Error recording TO: ", e$message)
-    })
+    if (input$track_player == "Other") {
+      player = input$track_player_input
+    } else {
+      player = input$track_player
+    }
+    
+    new_team = (if (input$track_team_type == "TEAM")
+      input$team else input$track_team)
+    
+    new_event =
+      data.frame("Event ID"=new_row_id(event=TRUE),
+                 League=input$league,
+                 Team=new_team,
+                 Date=input$plotter_date,
+                 Player=(if (str_detect(player, " - "))
+                   strsplit(player, " - ")[[1]][2] else player),
+                 OREB=0,
+                 DREB=0,
+                 AST=0,
+                 TO="Other",
+                 check.names=FALSE)
+    
+    add_to(mutate(new_event, TO=1))
+    tracked_events$df = rbind(tracked_events$df, new_event)
+    
+    new_event %>%
+      select(-OREB, -DREB, -AST, -TO) %>%
+      mutate(TO = "Other") %>%
+      add_turnover()
   })
   
   tracked_shots = reactiveValues(df = NULL)
