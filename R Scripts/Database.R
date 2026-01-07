@@ -299,15 +299,19 @@ remove_event <- function(id) {
 
 new_row_id <- function(shot=FALSE, event=FALSE) {
   if (shot) {
-    if (nrow(master_shots) == 0) {
+    if (nrow(master_shots) == 0 || is.null(master_shots$`Shot ID`)) {
       return(1)
     }
-    return(max(master_shots$`Shot ID`, na.rm = TRUE) + 1)
+    max_id <- max(master_shots$`Shot ID`, na.rm = TRUE)
+    if (is.infinite(max_id)) return(1)
+    return(max_id + 1)
   } else {
-    if (nrow(master_events) == 0) {
+    if (nrow(master_events) == 0 || is.null(master_events$`Event ID`)) {
       return(1)
     }
-    return(max(master_events$`Event ID`, na.rm = TRUE) + 1)
+    max_id <- max(master_events$`Event ID`, na.rm = TRUE)
+    if (is.infinite(max_id)) return(1)
+    return(max_id + 1)
   }
 }
 
